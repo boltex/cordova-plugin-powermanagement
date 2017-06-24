@@ -24,7 +24,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.PowerManager;
+import android.provider.Settings;
 import android.util.Log;
 
 import org.apache.cordova.CordovaWebView;
@@ -42,6 +45,8 @@ public class PowerManagement extends CordovaPlugin {
 	private PowerManager.WakeLock wakeLock = null;
 	private PowerManager powerManager = null;
 	private boolean releaseOnPause = true;
+	private CordovaInterface cordova = null;
+	private Context appContext = null;
 
 	/**
 	 * Fetch a reference to the power-service when the plugin is initialized
@@ -49,7 +54,8 @@ public class PowerManagement extends CordovaPlugin {
 	@Override
 	public void initialize(CordovaInterface cordova, CordovaWebView webView) {
 		super.initialize(cordova, webView);
-
+		this.cordova = cordova;
+		this.appContext = cordova.getActivity().getApplicationContext();
 		this.powerManager = (PowerManager) cordova.getActivity().getSystemService(Context.POWER_SERVICE);
 	}
 
@@ -79,6 +85,43 @@ public class PowerManagement extends CordovaPlugin {
 				} catch (Exception e) {
 					result = new PluginResult(PluginResult.Status.ERROR, "Could not set releaseOnPause");
 				}
+			} else if( action.equals("isDeviceIdleMode")) {
+				// Only available since API 23
+				if (android.os.Build.VERSION.SDK_INT >= 23) {
+					try {
+						// returns 1: device in idle mode, or 0: device not in idle mode
+						callbackContext.success((this.powerManager.isDeviceIdleMode() ? 1 : 0));
+					} catch (Exception e) {
+						result = new PluginResult(PluginResult.Status.ERROR, "Could not get device idle status.");
+					}
+				}
+				else {
+					// For APIs < 23, device never reaches idle state (Doze).
+					callbackContext.success(0);
+				}
+			} else if( action.equals("isIgnoringBatteryOptimizations")) {
+				// Only available since API 23
+				if (android.os.Build.VERSION.SDK_INT >= 23) {
+					try {
+						// returns 1: app is in battery whitelist, or 0: app is not in battery whitelist
+						callbackContext.success((this.powerManager.isIgnoringBatteryOptimizations(appContext.getPackageName()) ? 1 : 0));
+					} catch (Exception e) {
+						result = new PluginResult(PluginResult.Status.ERROR, "Could not check device's battery optimization list.");
+					}
+				}
+				else {
+					// Always true, Doze feature not available in APIs < 23
+					callbackContext.success(1);
+				}
+			} else if( action.equals("addAppToBatteryWhitelist")) {
+				// Only available since API 23
+				if (android.os.Build.VERSION.SDK_INT >= 23) {
+					result = addAppToBatteryWhitelist();
+				}
+				else {
+					// Nothing to do, so just return success
+					result = new PluginResult(PluginResult.Status.OK);
+				}
 			}
 		}
 		catch( JSONException e ) {
@@ -89,6 +132,27 @@ public class PowerManagement extends CordovaPlugin {
 		return true;
 	}
 
+	/**
+	 * Opens an activity (in this case a dialog) to allow the user to add the app to the battery optimization whitelist
+	 * @return PluginResult containing the status of adding the app to the battery optimization whitelist
+	 */
+	private PluginResult addAppToBatteryWhitelist () {
+		PluginResult result = null;
+		try {
+			Intent intent = new Intent();
+			intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+			intent.setData(Uri.parse("package:" + appContext.getPackageName()));
+			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			appContext.startActivity(intent);
+			
+			result = new PluginResult(PluginResult.Status.OK);
+		} catch (Exception e) {
+			result = new PluginResult(PluginResult.Status.ERROR, "Could not add app to device battery optimization list. Error:" + e.getMessage());
+		}
+		
+		return result;
+	}
+	
 	/**
 	 * Acquire a wake-lock
 	 * @param p_flags Type of wake-lock to acquire

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
-        id="at.gofg.sportscomputer.powermanagement"
+        id="com.bassena.powermanagement"
         version="1.1.0">
     <name>PowerManagement</name>
     <description>PowerManagement plugin for Cordova</description>
@@ -55,7 +55,16 @@
 
         <config-file target="AndroidManifest.xml" parent="/*">
             <uses-permission android:name="android.permission.WAKE_LOCK" />
+            <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
         </config-file>
+
+        <config-file target="AndroidManifest.xml" parent="/manifest/application">
+		<receiver android:exported="false" android:name="org.apache.cordova.powermanagement.PowerManagement">
+			<intent-filter>
+				<action android:name="android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+			</intent-filter>
+		</receiver>
+	</config-file>
 
         <source-file src="src/android/PowerManagement.java" target-dir="src/org/apache/cordova/powermanagement" />
     </platform>

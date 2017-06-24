@@ -58,4 +58,37 @@ PowerManagement.prototype.dim = function(successCallback,failureCallback) {
     cordova.exec(successCallback, failureCallback, 'PowerManagement', 'acquire', [true]);
 }
 
+/**
+ * Checks the device's idle state. Android Only.
+ *  *** Requires minimum API level 23 ***
+ *
+ * @param successCallback function to be called when the device's idle state returns successfully
+ * @param errorCallback function to be called when there was a problem with checking the device's idle state
+ */
+PowerManagement.prototype.isDeviceIdleMode = function(successCallback,failureCallback) {
+    cordova.exec(successCallback, failureCallback, 'PowerManagement', 'isDeviceIdleMode', []);
+}
+
+/**
+ * Checks if the app has been added to the battery optimization whitelist (i.e. ignores battery optimization). Android Only.
+ *  *** Requires minimum API level 23 ***
+ *
+ * @param successCallback function to be called when the check of the battery optimization whitelist returns successfully
+ * @param errorCallback function to be called when there was a problem with the check of the battery optimization whitelist
+ */
+PowerManagement.prototype.isIgnoringBatteryOptimizations = function (successCallback,failureCallback) {
+	cordova.exec(successCallback, failureCallback, 'PowerManagement', 'isIgnoringBatteryOptimizations', []);
+};
+
+/**
+ * Opens a dialog that allows the user to add the app to the battery optimization whitelist. Android Only.
+ *  *** Requires minimum API level 23 ***
+ *
+ * @param successCallback function to be called when adding the app to the battery optimization whitelist is successful
+ * @param errorCallback function to be called when there was a problem with adding the app to the battery optimization whitelist
+ */
+PowerManagement.prototype.addAppToBatteryWhitelist = function (successCallback,failureCallback) {
+	cordova.exec(successCallback, failureCallback, 'PowerManagement', 'addAppToBatteryWhitelist', []);
+};
+
 module.exports = new PowerManagement();
